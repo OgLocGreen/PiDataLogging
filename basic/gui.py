@@ -262,8 +262,9 @@ class LoggingApp:
     def start_measurement(self):
             if self.process_temperatur is None and self.process_humidity_air is None:
                 # Starte das Temperaturmessungs-Skript als separaten Prozess
-                self.process_temperatur = subprocess.Popen(['python', f'{self.script_dir}/temperature_logger.py'])
-                self.process_humidity_air = subprocess.Popen(['python', f'{self.script_dir}/humidity_air_logger.py'])
+                #self.process_temperatur = subprocess.Popen(['python', f'{self.script_dir}/temperature_logger.py'])
+                #self.process_humidity_air = subprocess.Popen(['python', f'{self.script_dir}/humidity_air_logger.py'])
+                self.process_humidity_air = subprocess.Popen(['python', f'{self.script_dir}/dht11.py'])
                 
                 self.start_button.config(text="Messung Stoppen", fg="green", command=self.stop_measurement)
             else:

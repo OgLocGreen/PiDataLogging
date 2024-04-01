@@ -90,5 +90,89 @@
     {
         "time": "2024-04-01 12:30:05",
         "average_temperature": 42.31666666666667
+    },
+    {
+        "time": "2024-04-01 16:30:14",
+        "average_temperature": 42.18032786885246
+    },
+    {
+        "time": "2024-04-01 16:31:14",
+        "average_temperature": 42.86666666666667
+    },
+    {
+        "time": "2024-04-01 16:32:14",
+        "average_temperature": 42.53333333333333
+    },
+    {
+        "time": "2024-04-01 16:33:14",
+        "average_temperature": 42.7
+    },
+    {
+        "time": "2024-04-01 16:34:14",
+        "average_temperature": 42.583333333333336
+    },
+    {
+        "time": "2024-04-01 16:35:14",
+        "average_temperature": 42.81666666666667
+    },
+    {
+        "time": "2024-04-01 16:36:14",
+        "average_temperature": 42.56666666666667
+    },
+    {
+        "time": "2024-04-01 16:37:14",
+        "average_temperature": 42.46666666666667
+    },
+    {
+        "time": "2024-04-01 16:38:15",
+        "average_temperature": 42.46666666666667
+    },
+    {
+        "time": "2024-04-01 16:39:15",
+        "average_temperature": 42.68333333333333
+    },
+    {
+        "time": "2024-04-01 16:40:15",
+        "average_temperature": 42.35
+    },
+    {
+        "time": "2024-04-01 16:41:15",
+        "average_temperature": 42.2
+    },
+    {
+        "time": "2024-04-01 16:42:15",
+        "average_temperature": 42.15
+    },
+    {
+        "time": "2024-04-01 16:43:15",
+        "average_temperature": 42.333333333333336
+    },
+    {
+        "time": "2024-04-01 16:44:15",
+        "average_temperature": 42.5
+    },
+    {
+        "time": "2024-04-01 16:45:15",
+        "average_temperature": 42.43333333333333
+    },
+    {
+        "time": "2024-04-01 16:46:15",
+        "average_temperature": 42.43333333333333
+    },
+    {
+        "time": "2024-04-01 16:47:15",
+        "average_temperature": 42.266666666666666
+    },
+    {
+        "time": "2024-04-01 16:48:15",
+        "average_temperature": 42.61666666666667
+    },
+    {
+        "time": "2024-04-01 16:49:15",
+        "average_temperature": 42.8
+    },
+    {
+        "time": "2024-04-01 16:50:15",
+        "average_temperature": 42.65
     }
 ]
