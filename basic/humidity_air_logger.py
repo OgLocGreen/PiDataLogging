@@ -21,13 +21,13 @@ def get_cpu_temperature_2():
                 return entry.current
     return None
 
-def log_temperature(interval_seconds=1, log_interval=60):
+def log_humidity(interval_seconds=1, log_interval=60):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     base_path = os.path.join(script_dir, "logging_data")
     os.makedirs(base_path, exist_ok=True)
 
     current_day = datetime.now().strftime('%Y-%m-%d')
-    file_name = os.path.join(base_path, f"temperatur_log_{current_day}.json")
+    file_name = os.path.join(base_path, f"humidity_log_{current_day}.json")
     
     if os.path.exists(file_name):
         with open(file_name, "r") as file:
@@ -47,7 +47,7 @@ def log_temperature(interval_seconds=1, log_interval=60):
         if new_day != current_day:
             # Ein neuer Tag hat begonnen, aktualisiere den Dateinamen und leere die alte Eintragsliste
             current_day = new_day
-            file_name = os.path.join(base_path, f"temperatur_log_{current_day}.json")
+            file_name = os.path.join(base_path, f"humidity_log_{current_day}.json")
             log_entry_old = []
 
         try :
@@ -66,7 +66,7 @@ def log_temperature(interval_seconds=1, log_interval=60):
                 avg_temp = sum(measurements) / len(measurements)
                 log_entry = {
                     "time": now.strftime("%Y-%m-%d %H:%M:%S"),
-                    "average_temperature": avg_temp
+                    "average_humidity": avg_temp
                 }
                 log_entry_old.append(log_entry)
                 
@@ -74,7 +74,7 @@ def log_temperature(interval_seconds=1, log_interval=60):
                 with open(file_name, "w") as file:
                     json.dump(log_entry_old, file, indent=4)
                 
-                print(f"Geloggte Durchschnittstemperatur: {avg_temp}°C")
+                print(f"Geloggte Durchschnittshumidity: {avg_temp}°C")
                 print(f"Logdatei erstellt: {os.path.abspath(file_name)}")
                 
             start_time = time.time()
@@ -83,4 +83,4 @@ def log_temperature(interval_seconds=1, log_interval=60):
         time.sleep(interval_seconds)
 
 if __name__ == "__main__":
-    log_temperature()
+    log_humidity()

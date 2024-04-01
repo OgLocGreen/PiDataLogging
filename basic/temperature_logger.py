@@ -27,7 +27,7 @@ def log_temperature(interval_seconds=1, log_interval=60):
     os.makedirs(base_path, exist_ok=True)
 
     current_day = datetime.now().strftime('%Y-%m-%d')
-    file_name = os.path.join(base_path, f"temperatur_log_{current_day}.json")
+    file_name = os.path.join(base_path, f"temperature_log_{current_day}.json")
     
     if os.path.exists(file_name):
         with open(file_name, "r") as file:
@@ -47,7 +47,7 @@ def log_temperature(interval_seconds=1, log_interval=60):
         if new_day != current_day:
             # Ein neuer Tag hat begonnen, aktualisiere den Dateinamen und leere die alte Eintragsliste
             current_day = new_day
-            file_name = os.path.join(base_path, f"temperatur_log_{current_day}.json")
+            file_name = os.path.join(base_path, f"temperature_log_{current_day}.json")
             log_entry_old = []
 
         try :

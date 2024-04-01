@@ -12,16 +12,36 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.dates as mdates
 
-class TemperatureApp:
+
+LABEL_SIZE = 8
+TITLE_SIZE = 10
+
+class LoggingApp:
     def __init__(self, master):
         self.master = master
-        master.title("Temperaturmessung Steuerung")
+        master.title("PiLogging")
 
         self.current_date = datetime.now()
         self.show_date = self.current_date
-        self.temperature_data = []
-        self.data_values = []
-        self.data_timestamps = []
+        
+        self.temperature_data_day = []
+        self.temperature_data_week = []
+        self.humidity_data_day = []
+        self.humidity_data_week = []
+
+        self.timestamps_day = []
+        self.timestamps_week = []
+
+        self.sensor_type = ['temperature', 'humidity']
+
+        # Overview data
+        self.temp_ahora = 0
+        self.temp_day = 0
+        self.temp_week = 0
+        self.humi_ahora = 0
+        self.humi_day = 0
+        self.humi_week = 0
+
         self.process_humidity_air = None
         self.process_temperatur = None
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -36,15 +56,30 @@ class TemperatureApp:
         self.left_frame = tk.Frame(self.top_frame)
         self.left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
+        # Erstellen des Frames für den unteren Teil des linken Frames
+        self.left_bottom_frame = tk.Frame(self.left_frame)
+        self.left_bottom_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+
         self.right_frame = tk.Frame(self.top_frame)
         self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-        # Widgets im linken Frame (Logs)
-        self.label = ttk.Label(self.left_frame, text=self.current_date.strftime('%Y-%m-%d'))
+        # Widgets im links oben Frame (Logs) 
+        self.label = ttk.Label(self.left_frame, text=self.show_date.strftime('%Y-%m-%d'))
         self.label.pack()
 
-        self.text = tk.Text(self.left_frame, height=10, width=50)
-        self.text.pack()
+        self.log_text = tk.Text(self.left_frame, height=10, width=50)
+        self.log_text.pack()
+
+        # Widget links Mitting
+        data_overview = ttk.Label(self.left_bottom_frame, text="Data Overview")
+        data_overview.pack()
+
+        self.overview_temp = tk.Label(self.left_bottom_frame, text= ("Temp: " +  str(self.temp_ahora) + " AvgTempDay: "+   str(self.temp_day) + " AvgTempWeek:" +   str(self.temp_week)))
+        self.overview_temp.pack()
+
+        self.overview_humi = tk.Label(self.left_bottom_frame, text= ("Humi: " +   str(self.humi_ahora) + " AvgHumiDay: "+   str(self.humi_day) + " AvgHumiWeek:" +   str(self.humi_week)))
+        self.overview_humi.pack()
 
         # Widgets im rechten Frame (Graph)
         self.figure = plt.Figure(figsize=(5, 4), dpi=100)
@@ -70,110 +105,159 @@ class TemperatureApp:
         self.next_button = ttk.Button(self.bottom_frame, text="Nächster Tag", command=self.next_day)
         self.next_button.pack(side=tk.RIGHT, padx=5, pady=5)
 
-        self.load_data(self.current_date)
+        # Init Data
+        self.load_data_day(self.current_date)
+        self.load_data_week(self.current_date)
+        self.update_display()
 
-    def load_data(self, date):
+    def update_overview(self):
+        self.overview_temp.config(text= ("Temp: " +  str(round(self.temp_ahora,2)) + "   AvgTempDay: "+   str(round(self.temp_day,2)) + "   AvgTempWeek:" +   str(round(self.temp_week,2))))
+        self.overview_humi.config(text= ("Humi: " +   str(round(self.humi_ahora,2)) + "   AvgHumiDay: "+   str(round(self.humi_day,2)) + "   AvgHumiWeek:" +   str(round(self.humi_week,2))))
+        self.overview_humi.pack()
+
+    def load_data_day(self, date):
         base_path = os.path.join(self.script_dir, "logging_data")
-        file_name = f"{base_path}/temperatur_log_{date.strftime('%Y-%m-%d')}.json"
-        self.temperature_data = []
-        try:
-            with open(file_name, "r") as file:
-                self.temperature_data = json.load(file)
-                print("Daten geladen")
-        except FileNotFoundError:
-                print("Keine Daten vorhanden")
-                pass
-        self.update_display(date)
 
-    def load_week_data(self, start_date):
-        week_data = []  # Eine Liste, die für jeden Tag eine Liste von stündlichen Durchschnittswerten enthält
-        for i in range(7):
-            day = start_date + timedelta(days=i)
-            file_name = f"{self.script_dir}/logging_data/temperatur_log_{day.strftime('%Y-%m-%d')}.json"
-            daily_data = []
+        # Laden von Temperatur- und Feuchtigkeitsdaten
+        for sensor_type in self.sensor_type:
+            file_name = f"{base_path}\\{sensor_type}_log_{date.strftime('%Y-%m-%d')}.json"
+            temp_data_day = []
             try:
                 with open(file_name, "r") as file:
-                    data = json.load(file)
-                    for hour in range(24):
-                        hourly_data = [entry['average_temperature'] for entry in data if datetime.strptime(entry['time'], '%Y-%m-%d %H:%M:%S').hour == hour]
-                        if hourly_data:
-                            daily_data.append(sum(hourly_data) / len(hourly_data))
-                        else:
-                            daily_data.append(None)  # Keine Daten für diese Stunde
+                    temp_data_day = json.load(file)
+                    print("Daten geladen")
             except FileNotFoundError:
-                daily_data = [None] * 24  # Keine Daten für diesen Tag
-            week_data.append(daily_data)
-        return week_data
+                print(f"Keine Daten vorhanden {sensor_type}_data_day")
+                continue  # Weiter zum nächsten Sensor-Typ, wenn keine Daten gefunden wurden
 
-    def update_week_graph(self, plot_pos, week_data):
+            # Extrahieren und Speichern der Daten
+            for entry in temp_data_day:
+                if sensor_type == 'temperature':
+                    self.temperature_data_day.append(entry[f'average_{sensor_type}'])
+                elif sensor_type == 'humidity':
+                    self.humidity_data_day.append(entry[f'average_{sensor_type}'])
+                self.timestamps_day.append(entry['time'])
+
+        self.temp_ahora = self.temperature_data_day[-1]
+        self.temp_day = sum(self.temperature_data_day)/ len(self.temperature_data_day)
+
+        self.humi_ahora =  self.humidity_data_day[-1]
+        self.humi_day = sum(self.humidity_data_day)/ len(self.humidity_data_day)
+
+
+    def load_data_week(self, start_date):
+        for sensor_type in self.sensor_type:
+            sensor_data_week = []
+            for i in range(7):
+                day = start_date + timedelta(days=i)
+                file_name = f"{self.script_dir}/logging_data/{sensor_type}_log_{day.strftime('%Y-%m-%d')}.json"
+                daily_data = []
+                try:
+                    with open(file_name, "r") as file:
+                        data = json.load(file)
+                        for hour in range(24):
+                            hourly_data = [entry[f'average_{sensor_type}'] for entry in data if datetime.strptime(entry['time'], '%Y-%m-%d %H:%M:%S').hour == hour]
+                            if hourly_data:
+                                daily_data.append(sum(hourly_data) / len(hourly_data))
+                            else:
+                                daily_data.append(None)  # Keine Daten für diese Stunde
+                except FileNotFoundError:
+                    daily_data = [None] * 24  # Keine Daten für diesen Tag
+                    print(f"Keine Daten vorhanden für {sensor_type}_data_week am {day}")
+                sensor_data_week.append(daily_data)
+            # Extrahieren und Speichern der Daten
+            if sensor_type == 'temperature':
+                self.temperature_data_week = []
+            elif sensor_type == 'humidity':
+                self.humidity_data_week = []
+
+            for entry in sensor_data_week:
+                if sensor_type == 'temperature':
+                    self.temperature_data_week.append(entry)
+                elif sensor_type == 'humidity':
+                    self.humidity_data_week.append(entry)
+
+
+    def update_graph_week(self, plot_pos, week_data, label):
         plot = self.plots[plot_pos]  # Zugriff auf den entsprechenden Plot basierend auf plot_pos
+        if plot == 1 or plot == 3:
+            return
+        
         plot.clear()  # Vorheriges Diagramm löschen
 
-        days = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+        days = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+        average = []
         for i, daily_data in enumerate(week_data):
-            if daily_data:
-                hours = range(24)
-                plot.plot(hours, daily_data, label=days[i % 7])
-        
-        plot.set_title('Wöchentliche Durchschnittstemperatur')
-        plot.set_xlabel('Stunde')
-        plot.set_ylabel('Temperatur (°C)')
-        plot.legend()
+            # Filtern Sie nur die Floats und berechnen Sie dann die Summe und die Anzahl der Floats
+            floats = [wert for wert in daily_data if isinstance(wert, float)]
+            summe = sum(floats)
+            anzahl_floats = len(floats)
+            # Berechne den Durchschnitt, falls es Floats gibt, sonst gebe None aus
+            average.append( summe / anzahl_floats if anzahl_floats > 0 else 99)
 
+        filtered_data = [wert for wert in average if wert is not None]
+        filtered_days = [day for day, wert in zip(days, average) if wert is not None]
+
+        # Erstellen Sie den Plot
+        plot.plot(filtered_days, filtered_data)
+        # Beschriftungen und Titel hinzufügen
+        plot.set_title("Average " + label + " Week")
+        # Verkleinern der Beschriftungen
+        plot.tick_params(axis='both', labelsize=LABEL_SIZE)
+        plot.set_title("Average " + label + " Week", fontsize=TITLE_SIZE) 
         self.canvas.draw()
    
 
-    def update_graph(self,plot_pos, date, dates, temperatures):
+    def update_graph_day(self,plot_pos, values, label):
         # Löschen des aktuellen Inhalts des Plots
         plot = self.plots[plot_pos]
-        self.text.delete(1.0, tk.END)
         plot.clear()
-        if len(dates) == 0 or len(temperatures) == 0:
+        if len(values) == 0:
             self.canvas.draw()
             return
-        else:
-            self.label.config(text=date.strftime('%Y-%m-%d'))         
+        else:      
             # Übergeben der Daten an den Plot
-            plot.plot(temperatures, label='Temperatur')
-            
-            plot.set_title('Durchschnittstemperatur')
-            plot.set_ylabel('Temperatur (°C)')
-            plot.legend()
-            
+            plot.plot(values, label=label)
+            plot.set_title('Durchschnitts'+label)
+            plot.set_ylabel(label)
+            plot.tick_params(axis='both', labelsize=LABEL_SIZE)
+            plot.set_title("Average " + label + " Week", fontsize=TITLE_SIZE) 
+           
             # Zeichnen des aktualisierten Plots
             self.canvas.draw()
 
-    def update_log(self, dates, temperatures):
-        if len(dates) == 0 or len(temperatures) == 0:
-            self.text.insert(tk.END, "Keine Daten vorhanden\n")
-        for timestamp, temperature in zip(dates, temperatures):
-            self.text.insert(tk.END, f"{timestamp}: {temperature}°C\n")
+    def update_log(self, dates, values):
+        if len(dates) == 0 or len(values) == 0:
+            self.log_text.insert(tk.END, "Keine Daten vorhanden\n")
+        for timestamp, temperature in zip(dates, values):
+            self.log_text.insert(tk.END, f"{timestamp}: {temperature}°C\n")
 
-    def update_display(self, date):
-        self.text.delete(1.0, tk.END)  # Löscht den aktuellen Inhalt des Text-Widgets
-        self.label.config(text=date)  # Aktualisiert das Label mit dem aktuellen Datum
-        
-        self.data_values = []
-        self.data_timestamps = []
-        try:
-            for entry in self.temperature_data:
-                # Fügt jeden Eintrag in das Text-Widget ein
-                self.text.insert(tk.END, f"{entry['time']}: {entry['average_temperature']}°C\n")
-                self.data_values.append(entry['average_temperature'])
-                self.data_timestamps.append(entry['time'])
-        except:
-            print("Fehler beim Laden der Daten")
-            pass
-        self.update_graph(3, self.show_date, self.data_timestamps, self.data_values)
-        self.update_log(self.data_timestamps, self.data_values)
+
+    def update_display(self):
+        self.label.config(text=self.show_date.strftime('%Y-%m-%d')) # Aktualisiert das Label mit dem aktuellen Datum
+        # Temperature
+        self.update_graph_day(1, self.temperature_data_day, "temperature")
+        self.update_log(self.timestamps_day, self.temperature_data_day)
+        self.update_graph_week(2, self.temperature_data_week, "temperature")
+
+        # Humidity
+        self.update_graph_day(3, self.humidity_data_day, "humidity")
+        self.update_graph_week(4, self.humidity_data_week, "humidity")
+
+        self.update_overview()
+
         
     def prev_day(self):
         self.show_date -= timedelta(days=1)
-        self.load_data(self.show_date)
+        self.load_data_day(self.show_date)
+        self.load_data_week(self.show_date)
+        self.update_display()
 
     def next_day(self):
         self.show_date += timedelta(days=1)
-        self.load_data(self.show_date)
+        self.load_data_day(self.show_date)
+        self.load_data_week(self.show_date)
+        self.update_display()
 
     def start_measurement(self):
             if self.process_temperatur is None and self.process_humidity_air is None:
@@ -194,5 +278,5 @@ class TemperatureApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = TemperatureApp(root)
+    app = LoggingApp(root)
     root.mainloop()
